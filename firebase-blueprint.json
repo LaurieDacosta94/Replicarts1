@@ -1,0 +1,152 @@
+{
+  "entities": {
+    "MatchLobby": {
+      "title": "MatchLobby",
+      "description": "Online matchmaking lobby for Crown & Dominion 3D RTS",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Host player Firebase Auth UID"
+        },
+        "hostName": {
+          "type": "string",
+          "description": "Display name of the lobby host"
+        },
+        "lobbyTitle": {
+          "type": "string",
+          "description": "Title of the matchmaking room"
+        },
+        "mapBiome": {
+          "type": "string",
+          "description": "Selected 3D map terrain biome"
+        },
+        "startAge": {
+          "type": "string",
+          "description": "Starting historical epoch"
+        },
+        "endAge": {
+          "type": "string",
+          "description": "Ending historical epoch"
+        },
+        "maxPlayers": {
+          "type": "integer",
+          "description": "Maximum number of nations in the match (2-8)"
+        },
+        "currentPlayers": {
+          "type": "integer",
+          "description": "Current number of joined players (1-8)"
+        },
+        "activeModpackName": {
+          "type": "string",
+          "description": "Name of active Modpack applied to the lobby"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["waiting", "in_progress", "completed"],
+          "description": "Current lifecycle state of the lobby"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public", "private"],
+          "description": "Lobby visibility for matchmaking queries"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())"
+        }
+      },
+      "required": [
+        "userId",
+        "hostName",
+        "lobbyTitle",
+        "mapBiome",
+        "startAge",
+        "endAge",
+        "maxPlayers",
+        "currentPlayers",
+        "activeModpackName",
+        "status",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CloudModpack": {
+      "title": "CloudModpack",
+      "description": "User-saved cloud modpack bundle with deep engine hooks",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Modpack display name"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author name"
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version string"
+        },
+        "description": {
+          "type": "string",
+          "description": "Summary of gameplay hooks and balance changes"
+        },
+        "modCount": {
+          "type": "integer",
+          "description": "Number of included mods in the pack"
+        },
+        "payloadJson": {
+          "type": "string",
+          "description": "Serialized Modpack bundle JSON"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())"
+        }
+      },
+      "required": [
+        "userId",
+        "name",
+        "author",
+        "version",
+        "description",
+        "modCount",
+        "payloadJson",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/match_lobbies/{lobbyId}": {
+      "schema": {
+        "$ref": "#/entities/MatchLobby"
+      },
+      "description": "Online matchmaking lobbies hosted by authenticated commanders"
+    },
+    "/cloud_modpacks/{modpackId}": {
+      "schema": {
+        "$ref": "#/entities/CloudModpack"
+      },
+      "description": "Per-user cloud synced modpacks and hook rulesets"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Crown and Dominion</string>
+    <string name="subtitle_imperial_rts">Rise of Ages 3D Strategy Engine</string>
+    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="action_fullscreen_toggle">Toggle Fullscreen</string>
+    <string name="action_copy_logs">Copy Console Logs</string>
+    <string name="action_export_api">Complete API Export</string>
+    <string name="action_mod_manager">Mod &amp; Modpack Studio</string>
+    <string name="action_spectator_mode">Spectator Mode</string>
+    <string name="action_matchmaking">Matchmaking Command</string>
+</resources>

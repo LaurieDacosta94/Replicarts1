@@ -1,0 +1,141 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidMatchLobby(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.hostName is string && data.hostName.size() >= 1 && data.hostName.size() <= 60 &&
+             data.lobbyTitle is string && data.lobbyTitle.size() >= 1 && data.lobbyTitle.size() <= 80 &&
+             data.mapBiome is string && data.mapBiome.size() >= 1 && data.mapBiome.size() <= 40 &&
+             data.startAge is string && data.startAge.size() >= 1 && data.startAge.size() <= 40 &&
+             data.endAge is string && data.endAge.size() >= 1 && data.endAge.size() <= 40 &&
+             data.maxPlayers is int && data.maxPlayers >= 2 && data.maxPlayers <= 8 &&
+             data.currentPlayers is int && data.currentPlayers >= 1 && data.currentPlayers <= data.maxPlayers &&
+             data.activeModpackName is string && data.activeModpackName.size() >= 1 && data.activeModpackName.size() <= 80 &&
+             data.status is string && (data.status == 'waiting' || data.status == 'in_progress' || data.status == 'completed') &&
+             data.visibility is string && (data.visibility == 'public' || data.visibility == 'private') &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidCloudModpack(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+             data.author is string && data.author.size() >= 1 && data.author.size() <= 60 &&
+             data.version is string && data.version.size() >= 1 && data.version.size() <= 30 &&
+             data.description is string && data.description.size() >= 1 && data.description.size() <= 500 &&
+             data.modCount is int && data.modCount >= 1 && data.modCount <= 64 &&
+             data.payloadJson is string && data.payloadJson.size() >= 2 && data.payloadJson.size() <= 50000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /match_lobbies/{lobbyId} {
+      allow get: if isSignedIn() &&
+                    isValidId(lobbyId) &&
+                    (existing().userId == request.auth.uid || existing().visibility == 'public');
+
+      allow list: if isSignedIn() &&
+                     (existing().userId == request.auth.uid || existing().visibility == 'public');
+
+      allow create: if isSignedIn() &&
+                       isValidId(lobbyId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'userId', 'hostName', 'lobbyTitle', 'mapBiome', 'startAge', 'endAge',
+                         'maxPlayers', 'currentPlayers', 'activeModpackName', 'status', 'visibility',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'hostName', 'lobbyTitle', 'mapBiome', 'startAge', 'endAge',
+                         'maxPlayers', 'currentPlayers', 'activeModpackName', 'status', 'visibility',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().status == 'waiting' &&
+                       isValidMatchLobby(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(lobbyId) &&
+                       isValidMatchLobby(incoming()) &&
+                       existing().status != 'completed' &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         // Action 1: Host updates lobby settings or status
+                         (existing().userId == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'lobbyTitle', 'mapBiome', 'startAge', 'endAge', 'maxPlayers',
+                            'currentPlayers', 'activeModpackName', 'status', 'visibility', 'updatedAt'
+                          ])) ||
+                         // Action 2: Authenticated challenger joins/leaves a public waiting lobby
+                         (existing().visibility == 'public' &&
+                          existing().status == 'waiting' &&
+                          incoming().status == 'waiting' &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['currentPlayers', 'updatedAt']))
+                       );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(lobbyId) &&
+                       existing().userId == request.auth.uid;
+    }
+
+    match /cloud_modpacks/{modpackId} {
+      allow get: if isSignedIn() &&
+                    isValidId(modpackId) &&
+                    existing().userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(modpackId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'userId', 'name', 'author', 'version', 'description',
+                         'modCount', 'payloadJson', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'name', 'author', 'version', 'description',
+                         'modCount', 'payloadJson', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidCloudModpack(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(modpackId) &&
+                       isValidCloudModpack(incoming()) &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'author', 'version', 'description',
+                         'modCount', 'payloadJson', 'updatedAt'
+                       ]);
+
+      allow delete: if isSignedIn() &&
+                       isValidId(modpackId) &&
+                       existing().userId == request.auth.uid;
+    }
+  }
+}

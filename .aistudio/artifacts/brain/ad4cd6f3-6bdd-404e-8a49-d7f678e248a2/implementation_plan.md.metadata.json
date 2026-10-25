@@ -1,0 +1,6 @@
+{
+  "summary":  "Comprehensive architectural and UX implementation plan for Rise of Empires 3D, a Rise of Nations-inspired 3D real-time strategy Android application featuring multi-era progression, LOD rendering, object pooling, deep modding hooks with a visual rule editor, API export tool, console log copy, offline/online matchmaking, collapsible combined UI panels, resource map-tracking, citizen/military automation, and spectator mode.",
+  "updatedAt":  "2026-10-25T16:21:37.183792224Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

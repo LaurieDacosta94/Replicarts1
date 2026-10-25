@@ -1,0 +1,6 @@
+{
+  "name": "Crown and Dominion",
+  "description": "3D real-time strategy game across 8 historical ages with territorial borders, LOD rendering, object pooling, mod manager, API export, and offline/online matchmaking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
